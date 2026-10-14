@@ -33,7 +33,7 @@ def get_open_ports(target, port_range, verbose=False):
             return "Error: Invalid hostname"
 
     ports = list(range(port_range[0], port_range[1] + 1))
-    with ThreadPoolExecutor(max_workers=100) as pool:
+    with ThreadPoolExecutor(max_workers=500) as pool:
         ergebnisse = list(pool.map(lambda p: _port_offen(ip, p), ports))
     open_ports = [p for p, offen in zip(ports, ergebnisse) if offen]
 
