@@ -1,9 +1,19 @@
 import socket
 import ipaddress
+from concurrent.futures import ThreadPoolExecutor
 from common_ports import ports_and_services
 
+
+def _port_offen(ip, port):
+    s = socket.socket()
+    s.settimeout(1)
+    try:
+        return s.connect_ex((ip, port)) == 0
+    finally:
+        s.close()
+
+
 def get_open_ports(target, port_range, verbose=False):
-    open_ports = []
     ip = target
     hostname = None
 
@@ -22,12 +32,10 @@ def get_open_ports(target, port_range, verbose=False):
         except socket.gaierror:
             return "Error: Invalid hostname"
 
-    for port in range(port_range[0], port_range[1] + 1):
-        s = socket.socket()
-        s.settimeout(1)
-        if s.connect_ex((ip, port)) == 0:
-            open_ports.append(port)
-        s.close()
+    ports = list(range(port_range[0], port_range[1] + 1))
+    with ThreadPoolExecutor(max_workers=100) as pool:
+        ergebnisse = list(pool.map(lambda p: _port_offen(ip, p), ports))
+    open_ports = [p for p, offen in zip(ports, ergebnisse) if offen]
 
     if not verbose:
         return open_ports
