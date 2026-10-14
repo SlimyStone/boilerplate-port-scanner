@@ -13,7 +13,7 @@ def _port_offen(ip, port):
         s.close()
 
 
-def get_open_ports(target, port_range, verbose=False):
+def get_open_ports(target, port_range, verbose=False, max_workers=500):
     ip = target
     hostname = None
 
@@ -33,7 +33,7 @@ def get_open_ports(target, port_range, verbose=False):
             return "Error: Invalid hostname"
 
     ports = list(range(port_range[0], port_range[1] + 1))
-    with ThreadPoolExecutor(max_workers=500) as pool:
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
         ergebnisse = list(pool.map(lambda p: _port_offen(ip, p), ports))
     open_ports = [p for p, offen in zip(ports, ergebnisse) if offen]
 
